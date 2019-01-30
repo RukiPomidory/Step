@@ -59,7 +59,7 @@ int leftLegs[] = {6, 7, 8, 9};          // Левый ряд
 int rightLegs[] = {10, 11, 12, 13};     // Правый ряд 
 
 // пограничные значения пина с кнопками
-int limits[] = {300, 500, 700}; 
+int limits[] = {200, 400, 550}; 
 
 int legsDuration = 1 * 1000; // Длительность движения ног
 int bodyDuration = 2 * 1000; // Длительность движения корпуса
@@ -108,30 +108,36 @@ void loop()
 
 bool getSwitchState(int pin)
 {
+    int lowValuePin;
+    int highValuePin;
+    
     int group;
-    int base;
     if (leftLegs[0] == pin ||
         leftLegs[1] == pin)
     {
-        base = 0;
-            group = LEFT_F;
+        lowValuePin = leftLegs[0];
+        highValuePin = leftLegs[1];
+        group = LEFT_F;
     }
     else if (leftLegs[2] == pin ||
             leftLegs[3] == pin)
     {
-        base = 2;
-            group = LEFT_B;
+        lowValuePin = leftLegs[2];
+        highValuePin = leftLegs[3];
+        group = LEFT_B;
     }
     else if (rightLegs[0] == pin ||
             rightLegs[1] == pin)
     {
-        base = 0;
+        lowValuePin = rightLegs[0];
+        highValuePin = rightLegs[1];
         group = RIGHT_F;
     }
     else if (rightLegs[2] == pin ||
             rightLegs[3] == pin)
     {
-        base = 2;
+        lowValuePin = rightLegs[2];
+        highValuePin = rightLegs[3];
         group = RIGHT_B;
     }
     else
@@ -141,17 +147,19 @@ bool getSwitchState(int pin)
 
     int value = analogRead(group);
 
+    D_LN(String(pin) + "\t: " + String(value));
+
     if (value < limits[0])
     {
         return false;
     }
     else if (value < limits[1])
     {
-        return pin == base;
+        return pin == lowValuePin;
     }
     else if (value < limits[2])
     {
-        return pin == (base + 1);
+        return pin == highValuePin;
     }
     else
     {
@@ -208,7 +216,8 @@ void move(int legs[], int direct)
     }
     else if (DOWN == direct)
     {
-        legsDown(legs, legsDuration);
+//        legsDown(legs, legsDuration);
+        legsDownUntilSwitch(legs);
     }
 }
 
