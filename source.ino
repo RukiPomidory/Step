@@ -3,7 +3,7 @@
   •__________________________________________•
   |  Картинка с наглядной   |                |
   |  распиновкой двигателей |                |
-  |-——————————————|                |
+  |—————————————————————————|                |
   |                                          |
   |                  ПЕРЕД                   |
   |             |=============|              |
@@ -48,6 +48,7 @@
 #define LEFT_B A1   // два левых задних
 #define RIGHT_F A2  // два правых передних
 #define RIGHT_B A3  // два правых задних
+#define CENTER_REED A5  // два геркона на центральных цилиндрах
 
 #define FORWARD_BUTTON 5    // Кнопки "вперед" и "назад"
 #define BACKWARD_BUTTON 4
@@ -55,20 +56,20 @@
 #define COMMON 3    // общий пин всех ног
 
 // Распиновка актуаторов, начиная с задних, заканчивая передними
-int leftLegs[] = {6, 7, 8, 9};          // Левый ряд
+int leftLegs[]  = {6, 7, 8, 9};          // Левый ряд
 int rightLegs[] = {10, 11, 12, 13};     // Правый ряд 
 
 // пограничные значения пина с кнопками
 int limits[] = {200, 400, 550}; 
 
-int legsDuration = 1 * 1000; // Длительность движения ног
-int bodyDuration = 2 * 1000; // Длительность движения корпуса
+int legsDuration = 7 * 1000; // Длительность движения ног
+int bodyDuration = 4 * 1000; // Длительность движения корпуса
 
 ////////////////////////////////////////////////////////////////////
 
 
 void setup() 
-{
+{ 
     D_INIT();
 
     // Указываем выходные пины
@@ -84,8 +85,8 @@ void setup()
 void loop() 
 {
     // Состояние кнопок управления
-    int forwardBtn =  digitalRead(FORWARD_BUTTON);
-    int backwardBtn =  digitalRead(BACKWARD_BUTTON);
+    int forwardBtn = digitalRead(FORWARD_BUTTON);
+    int backwardBtn = digitalRead(BACKWARD_BUTTON);
     
     if (0 == forwardBtn)
     {
@@ -172,7 +173,7 @@ void oneStep(int direct)
     if (FORWARD == direct)
     {
         front(UP);  // Поднимаем перед, перемещаем его вперед и опускаем
-        collapse();
+        collapseUntilSwitch();
         front(DOWN);
         
         back(UP);   // Поднимаем зад, также перемещаем вперед и опускаем
@@ -182,7 +183,7 @@ void oneStep(int direct)
     else if (BACKWARD == direct)
     {
         back(UP);   // Аналогично предыдущему, только в другую сторону
-        collapse();
+        collapseUntilSwitch();
         back(DOWN);
         
         front(UP);  
@@ -212,12 +213,13 @@ void move(int legs[], int direct)
 {
     if (UP == direct)
     {        
-        legsUp(legs, legsDuration);
+//        legsUp(legs, legsDuration);
+        legsUpUntilSwitch(legs);
     }
     else if (DOWN == direct)
     {
-//        legsDown(legs, legsDuration);
-        legsDownUntilSwitch(legs);
+        legsDown(legs, legsDuration);
+//        legsDownUntilSwitch(legs);
     }
 }
 
@@ -240,6 +242,23 @@ void collapse()
 
     digitalWrite(BODY, LOW);
     delay(bodyDuration);
+    
+    digitalWrite(COMMON, LOW);
+    turnAllOff();
+}
+
+void collapseUntilSwitch()
+{
+    digitalWrite(COMMON, HIGH);
+    turnAllOn();
+
+    digitalWrite(BODY, LOW);
+    int value = analogRead(CENTER_REED);
+    while(limits[0] > value)
+    {
+        value = analogRead(CENTER_REED);
+        delay(5);
+    }
     
     digitalWrite(COMMON, LOW);
     turnAllOff();
@@ -280,9 +299,9 @@ void legsDown(int legs[], int duration)
     turnAllOff();
 }
 
-void legsDownUntilSwitch(int legs[])
+void legsUpUntilSwitch(int legs[])
 {
-    digitalWrite(COMMON, LOW);
+    digitalWrite(COMMON, HIGH);
     turnAllOff();
     
     bool allStop = false;
@@ -295,11 +314,11 @@ void legsDownUntilSwitch(int legs[])
             
             if (state)
             {
-                digitalWrite(legs[i], LOW);
+                digitalWrite(legs[i], HIGH);
             }
             else
             {
-                digitalWrite(legs[i], HIGH);
+                digitalWrite(legs[i], LOW);
                 allStop = false;
             }
         }
