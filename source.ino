@@ -302,7 +302,7 @@ void legsDown(int legs[], int duration)
 void legsUpUntilSwitch(int legs[])
 {
     digitalWrite(COMMON, HIGH);
-    turnAllOff();
+    turnAllOn();
     
     bool allStop = false;
     while(!allStop)
@@ -323,6 +323,9 @@ void legsUpUntilSwitch(int legs[])
             }
         }
     }
+    
+    digitalWrite(COMMON, LOW);
+    turnAllOff();
 }
 
 void turnAllOn()
